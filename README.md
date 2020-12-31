@@ -3,7 +3,7 @@ Here contains data and scripts to reproduce the analysis and figures in the pape
 
 The analysis majorly include five parts:
 
-I. Pre processing sequencing data and tranform it to counts of dual-sgRNAs(Python).
+I. Pre-processing sequencing data and tranform it to counts of dual-sgRNAs(Python).
 
 II. Quality evaluation on our plasmid and cell libraries for combinatorial CRISPR screening (R).
 
