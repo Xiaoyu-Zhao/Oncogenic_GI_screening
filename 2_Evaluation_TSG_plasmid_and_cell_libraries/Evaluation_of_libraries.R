@@ -11,7 +11,8 @@ counts = read0[,3:ncol(read0)]
 rownames(counts) = read0$gene_names
 colnames(counts) = c("P1", "P2", "Vector1", "Vector2","PTEN1", "PTEN2", "PI3K1", "PI3K2", "Myc1", "Myc2")
 #How many dual-sgRNAs were detected in plasmid library?
-sum(counts$P1+counts$P2>0) #34878
+sum(counts$P1+counts$P2>0) #34282 
+
 #Matrix only containing dual-sgRNAs detected in plasmid library
 countsM = counts[(counts$P1+counts$P2)>0, 1:2]
 countsM$P12 = countsM$P1 + countsM$P2
@@ -42,6 +43,12 @@ ggsave("Density.plot.plasmid.libarary.pdf", width = 5.2, height =5.8, device = c
 #-------------------II. CDF on log2RPM of plasmid and cell libraries-------------------------
 #Calculate rpm(reads per million)
 rpm0 = data.frame(apply(counts, 2, function(x) {(x/sum(x)*1000000)}))
+rpm0$meanP = (rpm0$P1+rpm0$P2)/2
+rpm0$meanVector = (rpm0$Vector1+rpm0$Vector2)/2
+rpm0$meanPTEN  = (rpm0$PTEN1+rpm0$PTEN2)/2 
+rpm0$meanPI3K = (rpm0$PI3K1+rpm0$PI3K2)/2
+rpm0$meanMyc = (rpm0$Myc1+rpm0$Myc2)/2
+
 #log2(mean_rpm), "+1" is to avoid log2(0)
 logrpm0 = log2(rpm0+1)
 #Mean rmp of two replicates

@@ -1,4 +1,6 @@
 #Xiaoyu Zhao
+RNGkind(sample.kind = "Rounding")
+# RNGkind is to get the results from set.seed() to match for different R versions
 library(ggplot2)
 library(pheatmap)
 library(gplots)
@@ -43,7 +45,7 @@ dim(r.t2)
 coM3 = intersect(rownames(r.t1), rownames(r.t2))
 f.tgf = data.frame(f1 = r.t1[coM3,dim(r.t1)[2]], f2 = r.t2[coM3,dim(r.t2)[2]])
 f.tgf$f.avg = apply(f.tgf, 1, function(x) mean(x[1:2]))
-f.tgf$conditions = rep(paste0("+ TGF ", "\u03B2" , "1"), nrow(f.tgf))
+f.tgf$conditions = rep(paste0("TGF", "\u03B2" , "-1"), nrow(f.tgf))
 
 m1 = median(f.full[,"f.avg"])
 m2 = median(f.min[,"f.avg"])
@@ -54,12 +56,12 @@ files = list(f.full, f.min, f.tgf)
 dat1 = data.frame(do.call(rbind,files))
 dim(dat1)
 
-Conditions = factor(dat1$conditions, levels = c(paste0("+ TGF ", "\u03B2" , "1"),"Minimal", "Full"))
+Conditions = factor(dat1$conditions, levels = c(paste0("TGF", "\u03B2" , "-1"),"Minimal", "Full"))
  p = ggplot(dat1, aes(x=f.avg, fill=Conditions)) +
   geom_histogram(binwidth=.004, alpha=.5, position="identity")+
   scale_fill_manual(values=c("blue", "green", "magenta"))+
   theme_set(theme_bw())+
-  theme(#panel.border = element_blank(), 
+  theme(panel.border = element_rect(fill=NA, size=1, color = "black"), 
     panel.grid = element_blank(),
     panel.background = element_blank(),
     #panel.grid= element_line(linetype = "dashed"),
@@ -84,7 +86,7 @@ f3 = data.frame(read.csv("tgf/fitness/tgf_SKO_fitness_gene_level.csv", row.names
 
 f1$conditions =  rep("Full", nrow(f1))
 f2$conditions =  rep("Minimal", nrow(f2))
-f3$conditions =  rep(paste0("+ TGF ", "\u03B2" , "1"), nrow(f3))
+f3$conditions =  rep(paste0("TGF", "\u03B2" , "-1"), nrow(f3))
 
 f1_order = f1[order(f1$f.avg, decreasing = T),]
 f1_order$order = 1:53
@@ -94,14 +96,16 @@ f3_order = f3[order(f3$f.avg, decreasing = T),]
 f3_order$order = 1:53
 
 dat2 = rbind.data.frame(f1_order[1:5,], f2_order[1:5,], f3_order[1:5,])
-dat2$Conditions = factor(dat2$conditions, levels = c("Full", "Minimal", paste0("+ TGF ", "\u03B2" , "1")))
+dat2$Conditions = factor(dat2$conditions, levels = c("Full", "Minimal", paste0("TGF", "\u03B2" , "-1")))
 
 p <- ggplot(dat2,aes(x=order, y=f.avg))+
   geom_bar(position=position_dodge(), stat="identity", fill = "#5AC8FA", color ="#007AFF", width = 0.8)+
   geom_errorbar(aes(ymin=l, ymax=u), width=.2, color = "grey20")+
   scale_y_continuous(limits = c(-0.07, 0.25),
-                     breaks = seq(-0.1, 0.25, by =0.05),
-                     labels = seq(-0.1, 0.25, by = 0.05))+
+                     breaks = round(seq(-0.1, 0.25, by =0.05),2),
+                     labels = round(seq(-0.1, 0.25, by = 0.05),2))+
+  labs(title="",x ="TOP 5 SKOs", y = "Fitness")+
+  scale_fill_manual(values = c("magenta", "green", "blue"))+
   theme(panel.border = element_rect(color ="black", fill = NA, size =0.5), 
     panel.grid = element_blank(),
     panel.background = element_blank(),
@@ -110,19 +114,17 @@ p <- ggplot(dat2,aes(x=order, y=f.avg))+
     legend.position = "none",
     #legend.title = element_text(size = 20, face= "bold"),
     #legend.text = element_text(size=18 ),
-    axis.text.y  =element_text(size=15, color = 'black'),
+    axis.text.y = element_text(size=14, color = 'black'),
     axis.text.x =element_text(size=16, color = 'black',angle = 45, vjust =1, hjust = 1),
-    axis.title=element_text(size=16, color = 'black'),#face="bold")
+    axis.title =  element_text(size=14, color = 'black'),
     plot.title = element_text(size=18,hjust=0.5),
-    strip.text  = element_text(size = 16, color = 'black'),
+    strip.text  = element_text(size = 14, color = 'black'),
     strip.background = element_rect(color = "black", size = 0.5)
   )+
-  facet_grid(.~ Conditions)+
-  labs(title="",x ="TOP 5 SKOs", y = "Fitness")+
-  scale_fill_manual(values = c("magenta", "green", "blue"))
+  facet_grid(.~Conditions)
+  
 p
-ggsave("Comparison_in_vitro/TOP5_SKO_genes_3_conditions.pdf", device = cairo_pdf, width = 6, height= 3.5)
-
+ggsave("Comparison_in_vitro/TOP5_SKO_genes_3_conditions.pdf", device = cairo_pdf, width = 6.2, height= 3.5)
 #------------------------------------------III. Proportion of 3 catergories_dual_sgRNAs---------------------------------------------------------
 f1 = read.csv("full/fitness/full_relative_RPM_percentage_SKO_DKO_CTRL.csv", row.names = 1, header = T)
 f2 = read.csv("minimal/fitness/min_relative_RPM_percentage_SKO_DKO_CTRL.csv", row.names = 1, header = T)
@@ -192,17 +194,17 @@ rownames(res.myc) = res.myc$gene_names
 
 #Combine single-gene effects in vitro and in vivo
 SKOs = paste0(gene52, "-CTRL")
-res = cbind(f1[gene52,"f.avg"], f2[name,"f.avg"],  f3[name,"f.avg"],
-           res.pten[SKOs,"LFC"], res.pik3[SKOs,"LFC"], res.myc[SKOs,"LFC"])
-colnames(res) = c("Full", "Minimal", paste("+ TGF", "\u03B2" , "1"), "PTEN-/-", "PIK3CA", "HAMyc")
+res = cbind(f1[SKOs,"f.avg"], f2[SKOs,"f.avg"],  f3[SKOs,"f.avg"],
+           res.pten[SKOs,"LFC"], res.pik[SKOs,"LFC"], res.myc[SKOs,"LFC"])
+colnames(res) = c("Full", "Minimal", paste("TGF", "\u03B2" , "-1"), "PTEN-/-", "PIK3CA", "MYC")
 rownames(res) = gene52
 class(res)
 sgMatrix = apply(res, 2, function(x) scale(x))
-colnames(sgMatrix) = c("Full", "Minimal", paste("+ TGF", "\u03B2" , "1"), "PTEN-/-", "PIK3CA", "HAMyc")
-rownames(sgMatrix) = name
+colnames(sgMatrix) = c("Full", "Minimal", paste("TGF", "\u03B2" , "-1"), "PTEN-/-", "PIK3CA", "MYC")
+rownames(sgMatrix) = gene52
 
-CairoPDF(file = paste0("Comparison_in_vitro_in_vivo/Single_gene_effects_invitro_invivo.pdf"), 
-         width = 3.2, height = 6)
+CairoPDF(file = paste0("Comparison_in_vitro_in_vivo/Single_gene_effects_invitro_invivo.pdf"), width = 3.0, height = 6.2)
+
 heatmap.2(as.matrix(sgMatrix),
           Rowv = TRUE, 
           Colv = TRUE,
@@ -256,11 +258,11 @@ n4 = sum(nodes_min %in% rownames(cen_pten))/(length(nodes_min)-1)*100 #PTEN" was
 n5 = sum(nodes_min %in% rownames(cen_pik3))/(length(nodes_min))*100
 n6 = sum(nodes_min %in% rownames(cen_myc))/(length(nodes_min))*100
 
-nodes = data.frame(Groups = rep(c("PTEN-/-", "PIK3CA", "HAMyc"),2),
+nodes = data.frame(Groups = rep(c("PTEN-/-", "PIK3CA", "MYC"),2),
                    Conditions = c(rep("Full",3), rep("Minimal", 3)),
                    Fraction = c(n1, n2, n3, n4, n5, n6))
 
-p <- ggplot(nodes,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fraction,fill = factor(Groups,levels = c("PTEN-/-", "PIK3CA", "HAMyc"))))+
+p <- ggplot(nodes,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fraction,fill = factor(Groups,levels = c("PTEN-/-", "PIK3CA", "MYC"))))+
   geom_bar(position=position_dodge(), stat="identity",  width = 0.8,color="grey10")+
   theme(#panel.border = element_blank(), 
     panel.grid = element_blank(),
@@ -279,7 +281,7 @@ p <- ggplot(nodes,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fr
   scale_y_continuous(limits = c(0, 100), breaks = seq(0,100, by =25))+
   scale_fill_manual(values=c("orchid1","#FFCC00","#5AC8FA"), 
                         name=expression(paste(italic("In vivo")," groups")),
-                        labels=c("PTEN-/-", "PIK3CA", "HAMyc"))+
+                        labels=c("PTEN-/-", "PIK3CA", "MYC"))+
   labs(title="",x ="", y = expression(paste("% of nodes discovered ",italic("in vivo"))))
 p
 ggsave('Comparison_in_vitro_in_vivo/Overlapped_Nodes_invitro_and_invivo.pdf', width = 4.6, height = 3.5)
@@ -305,11 +307,11 @@ n4 = sum(rownames(gi_min) %in% rownames(gi_pten))/(nrow(gi_min)-4)*100 #"PTEN" l
 n5 = sum(rownames(gi_min)  %in% rownames(gi_pik3))/(nrow(gi_min))*100
 n6 = sum(rownames(gi_min)  %in% rownames(gi_myc))/(nrow(gi_min))*100
 
-edges = data.frame(Groups = rep(c("PTEN-/-", "PIK3CA", "HAMyc"),2),
+edges = data.frame(Groups = rep(c("PTEN-/-", "PIK3CA", "MYC"),2),
                    Conditions = c(rep("Full",3), rep("Minimal", 3)),
                    Fraction = c(n1, n2, n3, n4, n5, n6))
 
-p <- ggplot(edges,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fraction, fill = factor(Groups,levels = c("PTEN-/-", "PIK3CA", "HAMyc"))))+
+p <- ggplot(edges,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fraction, fill = factor(Groups,levels = c("PTEN-/-", "PIK3CA", "MYC"))))+
   geom_bar(position=position_dodge(), stat="identity",  width = 0.8,color="grey10")+
   theme(#panel.border = element_blank(), 
     panel.grid = element_blank(),
@@ -328,7 +330,7 @@ p <- ggplot(edges,aes(x=factor(Conditions, levels = c("Minimal", "Full")), y= Fr
   scale_y_continuous(limits = c(0, 80),breaks = seq(0,80, by =20))+
   scale_fill_manual(values=c("orchid1","#FFCC00","#5AC8FA"),
                     name=expression(paste(italic("In vivo")," groups")),
-                    labels=c("PTEN-/-", "PIK3CA", "HAMyc"))+
+                    labels=c("PTEN-/-", "PIK3CA", "MYC"))+
   labs(title="",x ="", y = expression(paste("% of edges discovered ",italic("in vivo"))))
 p
 ggsave('Comparison_in_vitro_in_vivo/Overlapped_Edges_invitro_and_invivo.pdf', width = 4.6, height = 3.5)
@@ -341,7 +343,7 @@ d = rbind.data.frame(d1, d2)
 ggplot(d,aes(x=Category, y= num, fill= factor(Conditions,levels = c("Minimal", "Full"))))+
   geom_boxplot(position=position_dodge(1), width = 0.7)+
   geom_dotplot(binaxis='y', stackdir='center', dotsize=1, position=position_dodge(1))+
-  theme(#panel.border = element_blank(), 
+  theme(panel.border = element_blank(), 
     panel.grid = element_blank(),
     panel.background = element_blank(),
     #panel.grid= element_line(linetype = "dashed"),
