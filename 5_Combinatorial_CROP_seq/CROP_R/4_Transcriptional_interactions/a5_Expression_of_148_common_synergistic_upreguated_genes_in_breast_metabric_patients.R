@@ -6,10 +6,11 @@ library(readxl)
 library(org.Hs.eg.db)
 keytypes(org.Hs.eg.db)
 setwd("~/Downloads/5_Combinatorial_CROP_seq/")
-read0 <- data.frame(read_excel("TableS7.xlsx", 6))
+read0 <- data.frame(read_excel("TableS7_Transcriptional_interactions_underlying_GIs.xlsx", 6))
 data = read0[,2:ncol(read0)]
 rownames(data) = read0[,1]
-d = data[,-9]
+which(colnames(data) == "GRHPR")
+d = data[,1:148]
 #----------------------------------I. Synergy of 140 common synergistic upregulated genes in NF2-TP53 DKO-----------------------------------------------
 unique(d$YAP1_CNA)
 unique(d$TP53_WT_MUT)
@@ -66,21 +67,21 @@ ggplot(df,  aes(x = catergory, y = expr, fill = catergory)) +
   #name="Types of Genetic Alterations",
   #breaks=c("Cells", "Tumors"),
   #labels=c("TP53- YAP/TAZ+", "20-40%", "40-60%", "60-80%", "80-100%"))+
-  geom_hline(yintercept=seq(8.5, 9.5, 0.5), linetype="dashed", color = "grey20")+
+  geom_hline(yintercept=seq(8.5, 9.5, 0.5), linetype="dashed", color = "grey20")
   #scale_y_continuous(limits = c(8.2,9.5), breaks = seq(8.5, 9.5, 0.5))
 ggsave("CROP_R/4_Transcriptional_interactions/Synergy_mean_expression_140_common_synergistic_genes_in_NF2_TP53.pdf", width = 4.1, height = 2.5)
 #ggsave("CROP_R/4_Transcriptional_interactions/Synergy_mean_expression_140_common_synergistic_genes_in_NF2_TP53_legend.pdf", width = 1.9, height = 2.5)
 
 #t.test(c(exp1,exp2), exp3, alternative = "greater")
-t.test(c(exp1,exp2), exp3, alternative = "greater")
-t.test(c(exp1,exp2), c(exp4, exp5), alternative = "greater")
+t.test(c(exp1,exp2), exp3, alternative = "greater") #8.273e-06
+t.test(c(exp1,exp2), c(exp4, exp5), alternative = "greater") #7.186e-07
 
 #--------------------------------II. Synergy of 140 common synergistic upregulated genes in NF2-PTEN DKO-----------------------------------------------
 unique(d$PTEN_WT_MUT)
 unique(d$PTEN_CNA)
 #DKO: mean expression in YAP1/WWTR-Gain/Amp PTEN-Mut/Homdel
 exp1 = rowMeans(as.matrix(d[d$YAP1_CNA %in% c("YAP1: Gain", "YAP1: Amplification") & (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)]))
-exp2 = rowMeans(as.matrix(d[d$WWTR1_CNA %in% c("WWTR1: Gain", "WWTR1: Amplification") & d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion", 9:ncol(d)]))
+exp2 = rowMeans(as.matrix(d[d$WWTR1_CNA %in% c("WWTR1: Gain", "WWTR1: Amplification") & (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)]))
 
 #SKO1: mean expression in YAP1/WWTR-Gain/Amp PTEN-Wt&Diploid
 exp3 = rowMeans(as.matrix(d[d$YAP1_CNA %in% c("YAP1: Gain", "YAP1: Amplification") & (d$PTEN_WT_MUT %in% "Wild type" & d$PTEN_CNA %in% "PTEN: Diploid"), 9:ncol(d)]))
@@ -133,28 +134,28 @@ ggplot(df,  aes(x = catergory, y = expr, fill = catergory)) +
 ggsave("CROP_R/4_Transcriptional_interactions/Synergy_mean_expression_140_common_synergistic_genes_in_NF2_PTEN.pdf", width = 4.7, height = 2.5)
 #ggsave("Synergy_mean_expression_140_common_synergistic_genes_in_NF2_PTEN_wo_legend.pdf", width = 1.9, height = 2.5)
 
-t.test(c(exp1,exp2), c(exp3,exp4), alternative = "greater")
-t.test(c(exp1,exp2), exp6, alternative = "greater")
+t.test(c(exp1,exp2), c(exp3,exp4), alternative = "greater") #0.01182
+t.test(c(exp1,exp2), exp5, alternative = "greater") #0.04542
 
 #----------------------------------III. Synergy of 140 common synergistic upregulated genes in PTEN-TP53 DKO-----------------------------------------------
 unique(d$PTEN_WT_MUT)
 unique(d$PTEN_CNA)
 
 #DKO: mean expression in TP53-Mut PTEN-Mut&Homdel
-exp1 = rowMeans(d[d$TP53_WT_MUT %in% "Mutated" &
-                (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)])
+exp1 = rowMeans(as.matrix(d[d$TP53_WT_MUT %in% "Mutated" &
+                (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)]))
 
 #SKO1: mean expression in TP53-Mut PTEN-Wt/Diploid
-exp2 = rowMeans(d[d$TP53_WT_MUT %in% "Mutated" &
-                    (d$PTEN_WT_MUT %in% "Wild type" & d$PTEN_CNA %in% "PTEN: Diploid") , 9:ncol(d)])
+exp2 = rowMeans(as.matrix(d[d$TP53_WT_MUT %in% "Mutated" &
+                    (d$PTEN_WT_MUT %in% "Wild type" & d$PTEN_CNA %in% "PTEN: Diploid") , 9:ncol(d)]))
 
 #SKO2: mean expression in TP53-Wt PTEN-Mut/Homdel
-exp3 = rowMeans(d[d$TP53_WT_MUT %in% "Wild type" & 
-                    (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)])
+exp3 = rowMeans(as.matrix(d[d$TP53_WT_MUT %in% "Wild type" & 
+                    (d$PTEN_WT_MUT %in% "Mutated" | d$PTEN_CNA %in% "PTEN: Deep Deletion"), 9:ncol(d)]))
 
 #Control: mean expression in TP53-Wt PTEN-Wt/Diploid
-exp4 = rowMeans(d[d$TP53_WT_MUT %in% "Wild type" &
-                    (d$PTEN_WT_MUT %in% "Wild type" & d$PTEN_CNA %in% "PTEN: Diploid") ,9:ncol(d)])
+exp4 = rowMeans(as.matrix(d[d$TP53_WT_MUT %in% "Wild type" &
+                    (d$PTEN_WT_MUT %in% "Wild type" & d$PTEN_CNA %in% "PTEN: Diploid") ,9:ncol(d)]))
 
 df = rbind.data.frame(data.frame(expr = exp1, catergory = rep("TP53-Mut PTEN-Mut/Homdel", length(exp1))),
                       data.frame(expr = exp2, catergory = rep("TP53-Mut PTEN-Wt&Diploid", length(exp2))),
@@ -193,5 +194,5 @@ ggplot(df,  aes(x = catergory, y = expr, fill = catergory)) +
 ggsave("CROP_R/4_Transcriptional_interactions/Synergy_mean_expression_140_common_synergistic_genes_in_PTEN_TP53.pdf", width = 4.0, height = 2.5)
 #ggsave("CROP_R/4_Transcriptional_interactions/Synergy_mean_expression_140_common_synergistic_genes_in_PTEN_TP53_(PTEN_Del)_wo_legend.pdf", width = 1.9, height = 2.5)
 
-t.test(exp1, exp2, alternative = "greater")
-t.test(exp1, exp3, alternative = "greater")
+t.test(exp1, exp2, alternative = "greater") #0.02394
+t.test(exp1, exp3, alternative = "greater") #0.02791
